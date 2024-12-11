@@ -48,7 +48,7 @@ const UserSchema = new mongoose.Schema({
 
 // 이메일 암호화 함수
 function encryptEmail(email) {
-  if (!email) return null;
+  // if (!email) return null;
   try {
     const iv = crypto.randomBytes(16);
     const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(encryptionKey, 'hex'), iv);

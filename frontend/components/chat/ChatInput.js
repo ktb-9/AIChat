@@ -11,6 +11,13 @@ import MentionDropdown from './MentionDropdown';
 import FilePreview from './FilePreview';
 import fileService from '../../services/fileService';
 
+const moveCursorToEnd = () => {
+  const input = inputRef.current;
+  if (input) {
+    input.selectionStart = input.selectionEnd = input.value.length;
+  }
+};
+
 const ChatInput = forwardRef(({
   message = '',
   onMessageChange = () => {},
@@ -122,6 +129,7 @@ const ChatInput = forwardRef(({
         content: message.trim()
       });
       setMessage('');
+      moveCursorToEnd();
     }
   }, [files, message, onSubmit, setMessage]);
 
