@@ -1,6 +1,6 @@
-import React from "react";
-import { Card } from "@goorm-dev/vapor-core";
-import {
+import React from 'react';
+import { Card } from '@goorm-dev/vapor-core';
+import { 
   Text,
   Status,
   Avatar,
@@ -8,18 +8,17 @@ import {
   CountAvatar,
   Spinner,
   Button,
-  Alert,
-} from "@goorm-dev/vapor-components";
-import { AlertCircle, WifiOff } from "lucide-react";
-import { withAuth } from "../middleware/withAuth";
-import { useChatRoom } from "../hooks/useChatRoom";
-import ChatMessages from "../components/chat/ChatMessages";
-import ChatInput from "../components/chat/ChatInput";
-import {
-  generateColorFromEmail,
-  getContrastTextColor,
-} from "../utils/colorUtils";
-import VirtualizedChatMessages from "../components/chat/VirtualizedChatMessages";
+  Alert
+} from '@goorm-dev/vapor-components';
+import { 
+  AlertCircle, 
+  WifiOff 
+} from 'lucide-react';
+import { withAuth } from '../middleware/withAuth';
+import { useChatRoom } from '../hooks/useChatRoom';
+import ChatMessages from '../components/chat/ChatMessages';
+import ChatInput from '../components/chat/ChatInput';
+import { generateColorFromEmail, getContrastTextColor } from '../utils/colorUtils';
 
 const ChatPage = () => {
   const {
@@ -59,7 +58,7 @@ const ChatPage = () => {
     handleReactionRemove,
     loadingMessages,
     hasMoreMessages,
-    handleLoadMore,
+    handleLoadMore
   } = useChatRoom();
 
   const renderParticipants = () => {
@@ -72,20 +71,22 @@ const ChatPage = () => {
     return (
       <div className="flex items-center gap-4 mt-2 px-6 border-b">
         <UserAvatarGroup size="md">
-          {participants.slice(0, maxVisibleAvatars).map((participant) => {
+          {participants.slice(0, maxVisibleAvatars).map(participant => {
             const backgroundColor = generateColorFromEmail(participant.email);
             const color = getContrastTextColor(backgroundColor);
-
+            
             return (
-              <Avatar
-                key={participant._id}
+              <Avatar 
+                key={participant._id} 
                 style={{ backgroundColor, color }}
                 className="participant-avatar"
                 name={participant.name}
               />
             );
           })}
-          {remainingCount > 0 && <CountAvatar value={remainingCount} />}
+          {remainingCount > 0 && (
+            <CountAvatar value={remainingCount} />
+          )}
           <div className="ml-3">총 {participants.length}명</div>
         </UserAvatarGroup>
       </div>
@@ -98,7 +99,7 @@ const ChatPage = () => {
         <Card.Body className="flex items-center justify-center">
           <div className="text-center mt-5">
             <Spinner size="lg" className="mb-4" />
-            <br />
+            <br/>
             <Text size="lg">채팅방 연결 중...</Text>
           </div>
         </Card.Body>
@@ -113,10 +114,13 @@ const ChatPage = () => {
           <Alert color="danger" className="mb-4">
             <AlertCircle className="w-5 h-5" />
             <span className="ml-2">
-              {error || "채팅방을 불러오는데 실패했습니다."}
+              {error || '채팅방을 불러오는데 실패했습니다.'}
             </span>
           </Alert>
-          <Button variant="primary" onClick={() => window.location.reload()}>
+          <Button
+            variant="primary"
+            onClick={() => window.location.reload()}
+          >
             다시 시도
           </Button>
         </Card.Body>
@@ -148,13 +152,11 @@ const ChatPage = () => {
       );
     }
 
-    if (connectionStatus === "disconnected") {
+    if (connectionStatus === 'disconnected') {
       return (
         <Alert color="warning" className="m-4">
           <WifiOff className="w-5 h-5" />
-          <span className="ml-2">
-            연결이 끊어졌습니다. 재연결을 시도합니다...
-          </span>
+          <span className="ml-2">연결이 끊어졌습니다. 재연결을 시도합니다...</span>
         </Alert>
       );
     }
@@ -174,31 +176,18 @@ const ChatPage = () => {
     }
 
     return (
-      // <ChatMessages
-      //   messages={messages}
-      //   streamingMessages={streamingMessages}
-      //   currentUser={currentUser}
-      //   room={room}
-      //   messagesEndRef={messagesEndRef}
-      //   onReactionAdd={handleReactionAdd}
-      //   onReactionRemove={handleReactionRemove}
-      //   loadingMessages={loadingMessages}
-      //   hasMoreMessages={hasMoreMessages}
-      //   onLoadMore={handleLoadMore}
-      //   socketRef={socketRef}
-      // />
-      <VirtualizedChatMessages
+      <ChatMessages
         messages={messages}
         streamingMessages={streamingMessages}
         currentUser={currentUser}
         room={room}
+        messagesEndRef={messagesEndRef}
+        onReactionAdd={handleReactionAdd}
+        onReactionRemove={handleReactionRemove}
         loadingMessages={loadingMessages}
         hasMoreMessages={hasMoreMessages}
         onLoadMore={handleLoadMore}
-        onReactionAdd={handleReactionAdd}
-        onReactionRemove={handleReactionRemove}
         socketRef={socketRef}
-        messagesEndRef={messagesEndRef}
       />
     );
   };
@@ -212,20 +201,20 @@ const ChatPage = () => {
   }
 
   const getConnectionStatus = () => {
-    if (connectionStatus === "connecting") {
+    if (connectionStatus === 'connecting') {
       return {
         label: "연결 중...",
-        color: "warning",
+        color: "warning"
       };
-    } else if (connectionStatus === "connected") {
+    } else if (connectionStatus === 'connected') {
       return {
         label: "연결됨",
-        color: "success",
+        color: "success"
       };
     } else {
       return {
         label: "연결 끊김",
-        color: "danger",
+        color: "danger"
       };
     }
   };
@@ -245,20 +234,18 @@ const ChatPage = () => {
           <Status
             label={status.label}
             color={status.color}
-            title={
-              connectionStatus === "connecting"
-                ? "재연결 시도 중..."
-                : status.label
-            }
+            title={connectionStatus === 'connecting' ? "재연결 시도 중..." : status.label}
           />
         </Card.Header>
 
         <Card.Body className="chat-room-body">
-          <div className="chat-messages">{renderContent()}</div>
+          <div className="chat-messages">
+            {renderContent()}
+          </div>
         </Card.Body>
 
         <Card.Footer className="chat-room-footer">
-          <ChatInput
+          <ChatInput 
             message={message}
             onMessageChange={handleMessageChange}
             onSubmit={handleMessageSubmit}
@@ -266,7 +253,7 @@ const ChatPage = () => {
             fileInputRef={fileInputRef}
             messageInputRef={messageInputRef}
             filePreview={filePreview}
-            disabled={connectionStatus !== "connected"}
+            disabled={connectionStatus !== 'connected'}
             uploading={false}
             showEmojiPicker={showEmojiPicker}
             showMentionList={showMentionList}
