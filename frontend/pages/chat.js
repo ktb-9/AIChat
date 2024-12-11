@@ -236,7 +236,7 @@ const ChatPage = () => {
     <div className="chat-container">
       <Card className="chat-room-card">
         <Card.Header className="chat-room-header">
-          <div className="flex items-center gap-2 w-full max-w-[80%]">
+          <div className="flex items-center gap-3">
             <Text size="xl" weight="bold" className="chat-room-title truncate">
               {room.name}
             </Text>

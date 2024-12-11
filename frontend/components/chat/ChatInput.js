@@ -110,6 +110,11 @@ const ChatInput = forwardRef(
       async (e) => {
         e?.preventDefault();
 
+        // IME 입력 중이면 제출하지 않음
+        if (e?.nativeEvent?.isComposing) {
+          return;
+        }
+
         if (files.length > 0) {
           try {
             const file = files;
@@ -139,7 +144,6 @@ const ChatInput = forwardRef(
       },
       [files, message, onSubmit, setMessage]
     );
-
     useEffect(() => {
       const handleClickOutside = (event) => {
         if (
@@ -202,6 +206,7 @@ const ChatInput = forwardRef(
         const textBeforeCursor = value.slice(0, cursorPosition);
         const lastAtSymbol = textBeforeCursor.lastIndexOf("@");
 
+        // 텍스트 영역 자동 크기 조절
         const textarea = e.target;
         textarea.style.height = "auto";
         const maxHeight =
@@ -217,9 +222,11 @@ const ChatInput = forwardRef(
           textarea.style.overflowY = "hidden";
         }
 
+        // 항상 입력값 업데이트
         onMessageChange(e);
 
-        if (lastAtSymbol !== -1) {
+        // 멘션 기능은 IME 입력이 완성된 후에만 처리
+        if (!e.nativeEvent.isComposing && lastAtSymbol !== -1) {
           const textAfterAt = textBeforeCursor.slice(lastAtSymbol + 1);
           const hasSpaceAfterAt = textAfterAt.includes(" ");
 
@@ -231,7 +238,9 @@ const ChatInput = forwardRef(
           }
         }
 
-        setShowMentionList(false);
+        if (!e.nativeEvent.isComposing) {
+          setShowMentionList(false);
+        }
       },
       [onMessageChange, setMentionFilter, setShowMentionList, setMentionIndex]
     );
