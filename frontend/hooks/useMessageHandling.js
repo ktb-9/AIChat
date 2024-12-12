@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { Toast } from "../components/Toast";
 import fileService from "../services/fileService";
-
+import fileUploadService from "../services/fileuploadservice";
 export const useMessageHandling = (
   socketRef,
   currentUser,
@@ -119,32 +119,34 @@ export const useMessageHandling = (
           const filesToUpload = Array.isArray(messageData.fileData)
             ? messageData.fileData
             : [messageData.fileData];
-          console.log("[Chat] Files to upload:", filesToUpload); // 추가된 로그
-          // 파일 데이터를 Base64로 변환
-          const processedFiles = await Promise.all(
-            filesToUpload.map(async (fileData) => {
-              return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => {
-                  // Base64 데이터 준비
-                  resolve({
-                    file: reader.result, // Base64 데이터
-                    name: fileData.name,
-                    type: fileData.type,
-                    size: fileData.size,
-                  });
-                };
-                reader.onerror = reject;
-                reader.readAsDataURL(fileData.file);
-              });
-            })
+          // 파일 업로드 처리
+          const uploadResults = await fileUploadService.uploadMultipleFiles(
+            filesToUpload.map((fileData) => fileData.file),
+            (progress) => {
+              setUploadProgress(progress);
+            }
           );
-          console.log("[Chat] Processed files:", processedFiles); // 추가된 로그
+          console.log("받음", uploadResults);
+          const uploadedFiles = uploadResults.map((result) => {
+            if (!result.success) {
+              throw new Error(result.message);
+            }
+
+            return {
+              url: result.data.file.location,
+              name: result.data.file.originalname,
+              type: result.data.file.mimetype,
+              size: result.data.file.size,
+              key: messageData.originalname,
+            };
+          });
+          console.log("전송", uploadedFiles);
+
           socketRef.current.emit("chatMessage", {
             room: roomId,
             type: "file",
             content: messageData.content || "",
-            fileData: processedFiles,
+            fileData: uploadedFiles,
           });
           console.log("[Chat] Message emitted"); // 추가된 로그
           setFilePreview(null);

@@ -7,11 +7,12 @@ const socketIO = require("socket.io");
 const path = require("path");
 const { router: roomsRouter, initializeSocket } = require("./routes/api/rooms");
 const routes = require("./routes");
+const FileUploadController = require("./controllers/uploadController");
 
 const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 5001;
-
+const fileUploadController = new FileUploadController();
 // trust proxy 설정 추가
 app.set("trust proxy", 1);
 
@@ -69,6 +70,7 @@ app.get("/health", (req, res) => {
 
 // API 라우트 마운트
 app.use("/api", routes);
+app.use("/api/aws", fileUploadController.getRouter());
 
 // Socket.IO 설정
 const io = socketIO(server, { cors: corsOptions });

@@ -514,32 +514,20 @@ module.exports = function (io) {
               throw new Error("파일 데이터가 올바르지 않습니다.");
             }
 
-            const imageUploader = new ImageUploader();
+            const processedFiles = fileData.map((fileItem) => {
+              // 직접 S3 URL 사용
+              if (!fileItem.url && !fileItem.location) {
+                throw new Error("유효한 파일 URL이 없습니다.");
+              }
 
-            const processedFiles = await Promise.all(
-              fileData.map(async (fileItem) => {
-                // Base64 데이터 처리
-                const base64Data = fileItem.file.split(",")[1];
-                const fileBuffer = Buffer.from(base64Data, "base64");
-
-                console.log("Processing file:", {
-                  name: fileItem.name,
-                  type: fileItem.type,
-                  size: fileItem.size,
-                });
-
-                // S3에 업로드
-                const uploadResult = await imageUploader.uploadFileToS3(
-                  fileBuffer,
-                  fileItem.name,
-                  fileItem.type
-                );
-
-                return {
-                  url: uploadResult.url,
-                };
-              })
-            );
+              return {
+                url: fileItem.url || fileItem.location,
+                name: fileItem.name,
+                type: fileItem.type,
+                size: fileItem.size,
+                key: fileItem.key, // S3 key 추가
+              };
+            });
 
             message = new Message({
               room,
@@ -550,8 +538,10 @@ module.exports = function (io) {
               reactions: {},
               metadata: new Map([
                 ["fileUrls", processedFiles.map((item) => item.url)],
+                ["fileDetails", processedFiles],
               ]),
             });
+            console.log(message);
             break;
 
           case "text":
