@@ -1,6 +1,6 @@
 // backend/utils/redisClient.js
-const Redis = require('redis');
-const { redisHost, redisPort } = require('../config/keys');
+const Redis = require('ioredis');
+const { redisHost, sentinelPorts, redisMasterName } = require('../config/keys');
 
 class RedisClient {
   constructor() {
@@ -12,35 +12,38 @@ class RedisClient {
   }
 
   async connect() {
-    if (this.isConnected && this.client) {
+    if (this.client && (this.client.status === 'connecting' || this.client.status === 'connected')) {
+      console.log('Redis client is already connecting or connected.');
       return this.client;
     }
-
+    
     try {
-      console.log('Connecting to Redis...');
+      console.log('Connecting to Redis Sentinel...');
 
-      this.client = Redis.createClient({
-        url: `redis://${redisHost}:${redisPort}`,
-        socket: {
-          host: redisHost,
-          port: redisPort,
-          reconnectStrategy: (retries) => {
-            if (retries > this.maxRetries) {
-              return null;
-            }
-            return Math.min(retries * 50, 2000);
+      this.client = new Redis({
+        sentinels: [
+          { host: '10.0.151.235', port: 26379 },
+          { host: '10.0.158.228', port: 26379 },
+          { host: '10.0.150.215', port: 26379 },
+        ],
+        name: redisMasterName,
+        sentinelReconnectStrategy: (retries) => {
+          if (retries > this.maxRetries) {
+            return null;
           }
+          return Math.min(retries * 50, 2000);
         }
       });
 
+
       this.client.on('connect', () => {
-        console.log('Redis Client Connected');
+        console.log('Redis Sentinel Connected');
         this.isConnected = true;
         this.connectionAttempts = 0;
       });
 
       this.client.on('error', (err) => {
-        console.error('Redis Client Error:', err);
+        console.error('Redis Sentinel Error:', err);
         this.isConnected = false;
       });
 
@@ -48,16 +51,29 @@ class RedisClient {
       return this.client;
 
     } catch (error) {
-      console.error('Redis connection error:', error);
+      console.error('Redis Sentinel connection error:', error);
       this.isConnected = false;
       this.retryConnection();
       throw error;
     }
   }
 
+  async retryConnection() {
+    if (this.connectionAttempts < this.maxRetries) {
+      this.connectionAttempts++;
+      console.log(`Retrying connection in ${this.retryDelay}ms...`);
+      await new Promise((resolve) => setTimeout(resolve, this.retryDelay));
+      return this.connect();
+    }
+    console.error('Max retry attempts reached. Could not connect to Redis.');
+  }
+
   async set(key, value, options = {}) {
     try {
-      if (!this.isConnected) {
+      if(!this.isConnected || !this.client){
+        await this.connect();
+      }
+      if (!this.isConnected || !this.client) {
         await this.connect();
       }
 
@@ -69,7 +85,7 @@ class RedisClient {
       }
 
       if (options.ttl) {
-        return await this.client.setEx(key, options.ttl, stringValue);
+        return await this.setEx(key, options.ttl, stringValue);
       }
       return await this.client.set(key, stringValue);
     } catch (error) {
@@ -80,7 +96,7 @@ class RedisClient {
 
   async get(key) {
     try {
-      if (!this.isConnected) {
+      if(!this.isConnected || !this.client){
         await this.connect();
       }
 
@@ -98,29 +114,9 @@ class RedisClient {
     }
   }
 
-  async setEx(key, seconds, value) {
-    try {
-      if (!this.isConnected) {
-        await this.connect();
-      }
-
-      let stringValue;
-      if (typeof value === 'object') {
-        stringValue = JSON.stringify(value);
-      } else {
-        stringValue = String(value);
-      }
-
-      return await this.client.setEx(key, seconds, stringValue);
-    } catch (error) {
-      console.error('Redis setEx error:', error);
-      throw error;
-    }
-  }
-
   async del(key) {
     try {
-      if (!this.isConnected) {
+      if(!this.isConnected || !this.client){
         await this.connect();
       }
       return await this.client.del(key);
@@ -132,7 +128,7 @@ class RedisClient {
 
   async expire(key, seconds) {
     try {
-      if (!this.isConnected) {
+      if(!this.isConnected || !this.client){
         await this.connect();
       }
       return await this.client.expire(key, seconds);
@@ -148,7 +144,7 @@ class RedisClient {
         await this.client.quit();
         this.isConnected = false;
         this.client = null;
-        console.log('Redis connection closed successfully');
+        console.log('Redis Sentinel connection closed successfully');
       } catch (error) {
         console.error('Redis quit error:', error);
         throw error;

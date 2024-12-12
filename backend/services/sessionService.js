@@ -25,10 +25,10 @@ class SessionService {
       if (!data) return null;
       if (typeof data === 'object') return data;
       if (typeof data !== 'string') return null;
-      
+
       // 이미 객체인 경우 즉시 반환
       if (data === '[object Object]') return null;
-      
+
       return JSON.parse(data);
     } catch (error) {
       console.error('JSON parse error:', error);
@@ -46,7 +46,7 @@ class SessionService {
       }
 
       if (ttl) {
-        await redisClient.setEx(key, ttl, jsonString);
+        await redisClient.set(key, jsonString, 'EX', ttl);
       } else {
         await redisClient.set(key, jsonString);
       }
@@ -99,9 +99,9 @@ class SessionService {
       }
 
       // 세션 ID 매핑 저장 - 문자열 값은 직접 저장
-      await redisClient.setEx(sessionIdKey, this.SESSION_TTL, userId.toString());
-      await redisClient.setEx(userSessionsKey, this.SESSION_TTL, sessionId);
-      await redisClient.setEx(activeSessionKey, this.SESSION_TTL, sessionId);
+      await redisClient.set(sessionIdKey, userId.toString(), 'EX', this.SESSION_TTL);
+      await redisClient.set(userSessionsKey, sessionId, 'EX', this.SESSION_TTL);
+      await redisClient.set(activeSessionKey, sessionId, 'EX', this.SESSION_TTL);
 
       return {
         sessionId,
@@ -167,7 +167,7 @@ class SessionService {
 
       // 세션 데이터 갱신
       sessionData.lastActivity = Date.now();
-      
+
       // 갱신된 세션 데이터 저장
       const updated = await this.setJson(sessionKey, sessionData, this.SESSION_TTL);
       if (!updated) {
@@ -275,7 +275,7 @@ class SessionService {
 
       // 세션 데이터 갱신
       sessionData.lastActivity = Date.now();
-      
+
       // 갱신된 세션 데이터 저장
       const updated = await this.setJson(sessionKey, sessionData, this.SESSION_TTL);
       if (!updated) {
@@ -301,8 +301,8 @@ class SessionService {
       console.error('Update last activity error:', error);
       return false;
     }
-  }  
-  
+  }
+
   static async getActiveSession(userId) {
     try {
       if (!userId) {
