@@ -12,6 +12,7 @@ import {
 } from "@goorm-dev/vapor-components";
 import { AlertCircle } from "lucide-react";
 import authService from "../../services/authService";
+import { Toast } from "../../components/Toast";
 
 function NewChatRoom() {
   const router = useRouter();
@@ -171,14 +172,11 @@ function NewChatRoom() {
                 value={formData.name}
                 onChange={(e) => {
                   const value = e.target.value;
-                  if (value.length > 20) {
-                    Toast.error("채팅방 이름은 20글자를 초과할 수 없습니다.");
-                  } else {
-                    setFormData((prev) => ({
-                      ...prev,
-                      name: value,
-                    }));
-                  }
+
+                  setFormData((prev) => ({
+                    ...prev,
+                    name: value,
+                  }));
                 }}
                 placeholder="채팅방 이름을 입력하세요"
                 disabled={loading}

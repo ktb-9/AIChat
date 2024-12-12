@@ -174,32 +174,32 @@ const ChatPage = () => {
     }
 
     return (
-      // <ChatMessages
-      //   messages={messages}
-      //   streamingMessages={streamingMessages}
-      //   currentUser={currentUser}
-      //   room={room}
-      //   messagesEndRef={messagesEndRef}
-      //   onReactionAdd={handleReactionAdd}
-      //   onReactionRemove={handleReactionRemove}
-      //   loadingMessages={loadingMessages}
-      //   hasMoreMessages={hasMoreMessages}
-      //   onLoadMore={handleLoadMore}
-      //   socketRef={socketRef}
-      // />
-      <VirtualizedChatMessages
+      <ChatMessages
         messages={messages}
         streamingMessages={streamingMessages}
         currentUser={currentUser}
         room={room}
+        messagesEndRef={messagesEndRef}
+        onReactionAdd={handleReactionAdd}
+        onReactionRemove={handleReactionRemove}
         loadingMessages={loadingMessages}
         hasMoreMessages={hasMoreMessages}
         onLoadMore={handleLoadMore}
-        onReactionAdd={handleReactionAdd}
-        onReactionRemove={handleReactionRemove}
         socketRef={socketRef}
-        messagesEndRef={messagesEndRef}
       />
+      // <VirtualizedChatMessages
+      //   messages={messages}
+      //   streamingMessages={streamingMessages}
+      //   currentUser={currentUser}
+      //   room={room}
+      //   loadingMessages={loadingMessages}
+      //   hasMoreMessages={hasMoreMessages}
+      //   onLoadMore={handleLoadMore}
+      //   onReactionAdd={handleReactionAdd}
+      //   onReactionRemove={handleReactionRemove}
+      //   socketRef={socketRef}
+      //   messagesEndRef={messagesEndRef}
+      // />
     );
   };
 

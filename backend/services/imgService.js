@@ -1,23 +1,20 @@
-import {
+const {
   S3Client,
+  PutObjectCommand,
   DeleteObjectCommand,
   HeadObjectCommand,
-} from "@aws-sdk/client-s3";
-import multer from "multer";
-import multerS3 from "multer-s3";
-import dotenv from "dotenv";
-
-dotenv.config();
+} = require("@aws-sdk/client-s3");
+const multer = require("multer");
+const multerS3 = require("multer-s3");
+require("dotenv").config();
 
 class ImageUploader {
   constructor(
-    db,
     config = {
-      bucket: "assetkungya",
+      bucket: "ktb9-stressed-bucket",
       region: "ap-northeast-2",
     }
   ) {
-    this.db = db; // MongoDB connection
     this.config = config;
     this.s3 = new S3Client({
       region: config.region,
@@ -28,32 +25,31 @@ class ImageUploader {
     });
   }
 
-  createThumbnailUploadMiddleware(userId) {
-    return multer({
-      storage: multerS3({
-        s3: this.s3,
-        bucket: this.config.bucket,
-        contentType: multerS3.AUTO_CONTENT_TYPE,
-        key: async (req, file, cb) => {
-          try {
-            const timestamp = Date.now();
-            const filename = `image/ai_image/${userId}_${timestamp}.png`;
-            cb(null, filename);
-          } catch (error) {
-            cb(error);
-          }
-        },
-        cacheControl: "no-store",
-      }),
-      fileFilter: (req, file, cb) => {
-        if (file.mimetype.startsWith("image/")) {
-          cb(null, true);
-        } else {
-          cb(new Error("잘못된 파일 유형입니다. 이미지만 허용됩니다."));
-        }
-      },
-    });
+  async uploadFileToS3(fileBuffer, originalname, mimetype) {
+    try {
+      const timestamp = Date.now();
+      const filename = `image/${timestamp}_${originalname}`;
+
+      const params = {
+        Bucket: this.config.bucket,
+        Key: filename,
+        Body: fileBuffer,
+        ContentType: mimetype,
+        CacheControl: "no-store",
+      };
+
+      const command = new PutObjectCommand(params);
+      await this.s3.send(command);
+
+      return {
+        url: `https://${this.config.bucket}.s3.${this.config.region}.amazonaws.com/${filename}`,
+        filename,
+      };
+    } catch (error) {
+      console.error("S3 Upload Error:", error);
+      throw error;
+    }
   }
 }
 
-export default ImageUploader;
+module.exports = ImageUploader;
