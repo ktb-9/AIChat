@@ -16,15 +16,15 @@ class RedisClient {
       console.log('Redis client is already connecting or connected.');
       return this.client;
     }
-
+    
     try {
       console.log('Connecting to Redis Sentinel...');
 
       this.client = new Redis({
         sentinels: [
-          { host: '127.0.0.1', port: 26381 },
-          { host: '127.0.0.1', port: 26382 },
-          { host: '127.0.0.1', port: 26383 },
+          { host: '10.0.151.235', port: 26379 },
+          { host: '10.0.158.228', port: 26379 },
+          { host: '10.0.150.215', port: 26379 },
         ],
         name: redisMasterName,
         sentinelReconnectStrategy: (retries) => {
