@@ -280,7 +280,7 @@ function ChatRoomsComponent() {
       try {
         setConnectionStatus(CONNECTION_STATUS.CONNECTING);
 
-        const response = await axiosInstance.get("/health", {
+        const response = await axiosInstance.get("api/health", {
           timeout: 5000,
           retries: 1,
         });
