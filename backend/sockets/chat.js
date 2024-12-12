@@ -8,6 +8,8 @@ const redisClient = require('../utils/redisClient');
 const SessionService = require('../services/sessionService');
 const aiService = require('../services/aiService');
 
+const REDIS_CHANNEL = 'chat-messages'
+
 module.exports = function (io) {
   const connectedUsers = new Map();
   const streamingSessions = new Map();
@@ -531,7 +533,7 @@ module.exports = function (io) {
             messages.forEach((msg) => {
               io.to(room).emit('message',msg);
             })
-            
+
             break;
 
           case 'text':
