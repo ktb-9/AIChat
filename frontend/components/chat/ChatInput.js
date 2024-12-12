@@ -117,15 +117,20 @@ const ChatInput = forwardRef(
 
         if (files.length > 0) {
           try {
-            const file = files;
-            if (!file) {
+            if (files.length === 0) {
               throw new Error("파일이 선택되지 않았습니다.");
             }
 
             onSubmit({
               type: "file",
               content: message.trim(),
-              fileData: file,
+              fileData: files.map((file) => ({
+                file: file.file, // 실제 File 객체
+                name: file.name,
+                type: file.type,
+                size: file.size,
+                url: file.url,
+              })),
             });
 
             setMessage("");
@@ -562,7 +567,6 @@ const ChatInput = forwardRef(
                   handleFileValidationAndPreview(e.target.files?.[0])
                 }
                 className="hidden"
-                accept="image/*,video/*,audio/*,application/pdf"
               />
             </div>
 

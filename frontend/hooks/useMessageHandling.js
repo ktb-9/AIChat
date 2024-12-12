@@ -109,7 +109,7 @@ export const useMessageHandling = (
       }
 
       try {
-        console.log("[Chat] Sending message:", messageData);
+        console.log("[Chat] Preparing message:", messageData); // 추가된 로그
 
         if (messageData.type === "file") {
           setUploading(true);
@@ -119,39 +119,34 @@ export const useMessageHandling = (
           const filesToUpload = Array.isArray(messageData.fileData)
             ? messageData.fileData
             : [messageData.fileData];
-
-          const uploadPromises = filesToUpload.map(async (fileData) => {
-            const uploadResponse = await fileService.uploadFile(
-              fileData.file,
-              (progress) => {
-                setUploadProgress(progress);
-              }
-            );
-
-            if (!uploadResponse.success) {
-              throw new Error(
-                uploadResponse.message || "파일 업로드에 실패했습니다."
-              );
-            }
-
-            return {
-              _id: uploadResponse.data.file._id,
-              filename: uploadResponse.data.file.filename,
-              originalname: uploadResponse.data.file.originalname,
-              mimetype: uploadResponse.data.file.mimetype,
-              size: uploadResponse.data.file.size,
-            };
-          });
-
-          const uploadedFiles = await Promise.all(uploadPromises);
-
+          console.log("[Chat] Files to upload:", filesToUpload); // 추가된 로그
+          // 파일 데이터를 Base64로 변환
+          const processedFiles = await Promise.all(
+            filesToUpload.map(async (fileData) => {
+              return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                  // Base64 데이터 준비
+                  resolve({
+                    file: reader.result, // Base64 데이터
+                    name: fileData.name,
+                    type: fileData.type,
+                    size: fileData.size,
+                  });
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(fileData.file);
+              });
+            })
+          );
+          console.log("[Chat] Processed files:", processedFiles); // 추가된 로그
           socketRef.current.emit("chatMessage", {
             room: roomId,
             type: "file",
             content: messageData.content || "",
-            fileData: uploadedFiles,
+            fileData: processedFiles,
           });
-
+          console.log("[Chat] Message emitted"); // 추가된 로그
           setFilePreview(null);
           setMessage("");
           setUploading(false);
@@ -189,7 +184,6 @@ export const useMessageHandling = (
     },
     [currentUser, router, handleSessionError, socketRef]
   );
-
   const handleEmojiToggle = useCallback(() => {
     setShowEmojiPicker((prev) => !prev);
   }, []);

@@ -9,6 +9,7 @@ const multerS3 = require("multer-s3");
 require("dotenv").config();
 
 class ImageUploader {
+  // 클래스 이름도 FileUploader로 변경하는 것이 좋습니다
   constructor(
     config = {
       bucket: "ktb9-stressed-bucket",
@@ -25,10 +26,20 @@ class ImageUploader {
     });
   }
 
+  getFileType(mimetype) {
+    if (mimetype.startsWith("image/")) return "image";
+    if (mimetype.startsWith("video/")) return "video";
+    if (mimetype.startsWith("audio/")) return "audio";
+    if (mimetype.startsWith("application/pdf")) return "pdf";
+    if (mimetype.startsWith("application/")) return "document";
+    return "etc";
+  }
+
   async uploadFileToS3(fileBuffer, originalname, mimetype) {
     try {
       const timestamp = Date.now();
-      const filename = `image/${timestamp}_${originalname}`;
+      const fileType = this.getFileType(mimetype);
+      const filename = `${fileType}/${timestamp}_${originalname}`; // 파일 타입별 경로
 
       const params = {
         Bucket: this.config.bucket,
@@ -51,5 +62,4 @@ class ImageUploader {
     }
   }
 }
-
 module.exports = ImageUploader;

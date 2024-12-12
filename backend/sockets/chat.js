@@ -514,30 +514,28 @@ module.exports = function (io) {
               throw new Error("파일 데이터가 올바르지 않습니다.");
             }
 
+            const imageUploader = new ImageUploader();
+
             const processedFiles = await Promise.all(
               fileData.map(async (fileItem) => {
-                const file = await File.findOne({
-                  _id: fileItem._id,
-                  user: socket.user.id,
+                // Base64 데이터 처리
+                const base64Data = fileItem.file.split(",")[1];
+                const fileBuffer = Buffer.from(base64Data, "base64");
+
+                console.log("Processing file:", {
+                  name: fileItem.name,
+                  type: fileItem.type,
+                  size: fileItem.size,
                 });
 
-                if (!file) {
-                  throw new Error(`파일을 찾을 수 없습니다: ${fileItem._id}`);
-                }
-
-                // S3 업로더 초기화
-                const imageUploader = new ImageUploader();
-
-                // 파일 버퍼로 S3에 업로드
+                // S3에 업로드
                 const uploadResult = await imageUploader.uploadFileToS3(
-                  file.buffer,
-                  file.originalname,
-                  file.mimetype
+                  fileBuffer,
+                  fileItem.name,
+                  fileItem.type
                 );
 
-                // 파일 객체에 S3 URL 추가
                 return {
-                  ...file.toObject(), // 문서를 일반 객체로 변환
                   url: uploadResult.url,
                 };
               })
@@ -547,17 +545,13 @@ module.exports = function (io) {
               room,
               sender: socket.user.id,
               type: "file",
-              file: processedFiles.map((file) => file._id),
               content: content || "",
               timestamp: new Date(),
               reactions: {},
-              metadata: {
-                fileCount: processedFiles.length,
-                fileTypes: processedFiles.map((file) => file.mimetype),
-                fileUrls: processedFiles.map((file) => file.url),
-              },
+              metadata: new Map([
+                ["fileUrls", processedFiles.map((item) => item.url)],
+              ]),
             });
-            break;
             break;
 
           case "text":

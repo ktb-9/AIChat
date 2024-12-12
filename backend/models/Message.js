@@ -210,7 +210,8 @@ MessageSchema.pre("remove", async function (next) {
   try {
     if (this.type === "file" && this.file) {
       const File = mongoose.model("File");
-      await File.findByIdAndDelete(this.file);
+      // 여러 파일 삭제 지원
+      await File.deleteMany({ _id: { $in: this.file } });
     }
     next();
   } catch (error) {
@@ -224,6 +225,7 @@ MessageSchema.pre("remove", async function (next) {
 });
 
 // 메시지 저장 전 후크 개선
+// 메시지 저장 전 후크 개선
 MessageSchema.pre("save", function (next) {
   try {
     if (this.content && this.type !== "file") {
@@ -233,10 +235,17 @@ MessageSchema.pre("save", function (next) {
     if (this.mentions?.length) {
       this.mentions = [...new Set(this.mentions)];
     }
+
     if (this.type === "file") {
-      if (!this.file || this.file.length === 0) {
-        throw new Error("적어도 하나의 파일이 필요합니다.");
+      // 파일 URL 배열 검증
+      const fileUrls = this.metadata?.get("fileUrls") || [];
+
+      if (!fileUrls || fileUrls.length === 0) {
+        throw new Error("적어도 하나의 파일 URL이 필요합니다.");
       }
+
+      // 파일 필드에 빈 배열 설정
+      this.file = [];
     }
     next();
   } catch (error) {
@@ -263,6 +272,10 @@ MessageSchema.methods.toJSON = function () {
       obj.reactions = Object.fromEntries(obj.reactions);
     }
 
+    // metadata Map을 일반 객체로 변환
+    if (obj.metadata) {
+      obj.metadata = Object.fromEntries(obj.metadata);
+    }
     return obj;
   } catch (error) {
     console.error("Message toJSON error:", {
