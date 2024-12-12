@@ -130,8 +130,12 @@ body {
 .chat-room-header {
   padding: 1rem 1.5rem;
   display: flex;
+  width: 95%;
   justify-content: space-between;
   align-items: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .chat-room-title {
@@ -226,7 +230,7 @@ body {
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 0.25rem;
-  width: 100%; 
+  width: 100%;
 }
 
 .mine .message-sender-info {
@@ -257,7 +261,7 @@ body {
 }
 
 .message-mine:after {
-  content: '';
+  content: "";
   position: absolute;
   right: -0.5rem;
   bottom: 0;
@@ -274,7 +278,7 @@ body {
 }
 
 .message-other:after {
-  content: '';
+  content: "";
   position: absolute;
   left: -0.5rem;
   bottom: 0;
@@ -291,7 +295,7 @@ body {
 }
 
 .message-ai:after {
-  content: '';
+  content: "";
   position: absolute;
   left: -0.5rem;
   bottom: 0;
@@ -353,7 +357,7 @@ body {
 
 .message-content .list-none {
   list-style: none;
-  margin-left: -1.5rem; 
+  margin-left: -1.5rem;
 }
 
 .message-content .list-none input[type="checkbox"] {
@@ -384,12 +388,14 @@ body {
   font-size: 1.125rem;
 }
 
-.message-content .md-list, .message-content .contains-task-list {
+.message-content .md-list,
+.message-content .contains-task-list {
   margin: 0.5rem 0;
   padding-left: 1.5rem;
 }
 
-.message-content .md-list-item, .message-content .task-list-item {
+.message-content .md-list-item,
+.message-content .task-list-item {
   margin: 0.25rem 0;
 }
 
@@ -409,7 +415,7 @@ body {
 }
 
 .message-content code:not([class*="language-"]) {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
     "Liberation Mono", "Courier New", monospace;
   padding: 0.2rem 0.4rem;
   border-radius: 0.25rem;
@@ -610,7 +616,8 @@ input[type="file"] {
 }
 
 /* File Action Buttons */
-.file-message img, .file-message video {
+.file-message img,
+.file-message video {
   max-width: 300px;
 }
 
@@ -666,10 +673,10 @@ input[type="file"] {
 .file-preview-item {
   flex: 0 0 260px;
   width: 260px;
-  border: 1px solid rgba(255,255,255,0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 0.375rem;
   overflow: hidden;
-  background: rgba(0,0,0,0.15);
+  background: rgba(0, 0, 0, 0.15);
 }
 
 .file-preview-item img {
@@ -756,7 +763,7 @@ input[type="file"] {
   width: 100%;
   background: var(--surface-color);
   border-radius: 0.5rem;
-  position: relative;  
+  position: relative;
 }
 
 /* First Layer: Markdown Toolbar */
@@ -782,8 +789,8 @@ input[type="file"] {
   display: flex;
   justify-content: center;
   align-items: center;
-  position: relative; 
-  width: 100%;  
+  position: relative;
+  width: 100%;
 }
 
 .chat-input-textarea {
@@ -995,7 +1002,7 @@ input[type="file"] {
 
 .action-button {
   align-items: center;
-  border: 1px solid rgba(255,255,255,0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 7px 4px;
   background: transparent;
   border-radius: 0.375rem;
@@ -1016,21 +1023,36 @@ input[type="file"] {
 }
 
 .bg-transparent-pattern {
-  background-image: 
-    linear-gradient(45deg, rgba(200,200,200,0.5) 25%, transparent 25%, transparent 75%, rgba(200,200,200,0.5) 75%), 
-    linear-gradient(45deg, rgba(200,200,200,0.5) 25%, transparent 25%, transparent 75%, rgba(200,200,200,0.5) 75%);
+  background-image: linear-gradient(
+      45deg,
+      rgba(200, 200, 200, 0.5) 25%,
+      transparent 25%,
+      transparent 75%,
+      rgba(200, 200, 200, 0.5) 75%
+    ),
+    linear-gradient(
+      45deg,
+      rgba(200, 200, 200, 0.5) 25%,
+      transparent 25%,
+      transparent 75%,
+      rgba(200, 200, 200, 0.5) 75%
+    );
   background-size: 20px 20px; /* 패턴 크기 */
   background-position: 0 0, 10px 10px;
 }
 
 /* 토스트 진행바 스타일 */
 .Toastify__progress-bar--warning {
-  background: linear-gradient(to right, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.7));
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0.7),
+    rgba(255, 255, 255, 0.7)
+  );
 }
 
 /* 중복 로그인 토스트 스타일 */
 .duplicate-login-toast {
-  background-color: #FFA726 !important;
+  background-color: #ffa726 !important;
   color: white;
 }
 
@@ -1118,7 +1140,7 @@ pre {
   position: absolute;
   bottom: 100%;
   z-index: 1000;
-  animation: fadeIn 0.2s ease-out;  
+  animation: fadeIn 0.2s ease-out;
 }
 
 .mine .emoji-picker-wrapper {
@@ -1212,8 +1234,13 @@ pre {
 }
 
 @keyframes typing {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
 }
 
 /* Accessibility */

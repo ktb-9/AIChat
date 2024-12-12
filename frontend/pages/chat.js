@@ -174,32 +174,32 @@ const ChatPage = () => {
     }
 
     return (
-      // <ChatMessages
-      //   messages={messages}
-      //   streamingMessages={streamingMessages}
-      //   currentUser={currentUser}
-      //   room={room}
-      //   messagesEndRef={messagesEndRef}
-      //   onReactionAdd={handleReactionAdd}
-      //   onReactionRemove={handleReactionRemove}
-      //   loadingMessages={loadingMessages}
-      //   hasMoreMessages={hasMoreMessages}
-      //   onLoadMore={handleLoadMore}
-      //   socketRef={socketRef}
-      // />
-      <VirtualizedChatMessages
+      <ChatMessages
         messages={messages}
         streamingMessages={streamingMessages}
         currentUser={currentUser}
         room={room}
+        messagesEndRef={messagesEndRef}
+        onReactionAdd={handleReactionAdd}
+        onReactionRemove={handleReactionRemove}
         loadingMessages={loadingMessages}
         hasMoreMessages={hasMoreMessages}
         onLoadMore={handleLoadMore}
-        onReactionAdd={handleReactionAdd}
-        onReactionRemove={handleReactionRemove}
         socketRef={socketRef}
-        messagesEndRef={messagesEndRef}
       />
+      // <VirtualizedChatMessages
+      //   messages={messages}
+      //   streamingMessages={streamingMessages}
+      //   currentUser={currentUser}
+      //   room={room}
+      //   loadingMessages={loadingMessages}
+      //   hasMoreMessages={hasMoreMessages}
+      //   onLoadMore={handleLoadMore}
+      //   onReactionAdd={handleReactionAdd}
+      //   onReactionRemove={handleReactionRemove}
+      //   socketRef={socketRef}
+      //   messagesEndRef={messagesEndRef}
+      // />
     );
   };
 
@@ -237,7 +237,7 @@ const ChatPage = () => {
       <Card className="chat-room-card">
         <Card.Header className="chat-room-header">
           <div className="flex items-center gap-3">
-            <Text size="xl" weight="bold" className="chat-room-title">
+            <Text size="xl" weight="bold" className="chat-room-title truncate">
               {room.name}
             </Text>
             {renderParticipants()}
