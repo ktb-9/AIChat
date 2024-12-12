@@ -7,22 +7,24 @@ const socketIO = require("socket.io");
 const path = require("path");
 const { router: roomsRouter, initializeSocket } = require("./routes/api/rooms");
 const routes = require("./routes");
+const FileUploadController = require("./controllers/uploadController");
 
 const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 5001;
-
+const fileUploadController = new FileUploadController();
 // trust proxy 설정 추가
 app.set("trust proxy", 1);
 
 // CORS 설정
 const corsOptions = {
   origin: [
-    "https://bootcampchat-fe.run.goorm.site",
-    "http://localhost:3000",
-    "https://localhost:3000",
-    "http://0.0.0.0:3000",
-    "https://0.0.0.0:3000",
+    "https://chat.goorm-ktb-009.goorm.team",
+    "http://chat.goorm-ktb-009.goorm.team",
+    "https://chat.goorm-ktb-009.goorm.team/5000",
+    "http://chat.goorm-ktb-009.goorm.team/5000",
+    "https://chat.goorm-ktb-009.goorm.team/5001",
+    "http://chat.goorm-ktb-009.goorm.team/5001",
   ],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -69,6 +71,7 @@ app.get("/health", (req, res) => {
 
 // API 라우트 마운트
 app.use("/api", routes);
+app.use("/api/aws", fileUploadController.getRouter());
 
 // Socket.IO 설정
 const io = socketIO(server, { cors: corsOptions });
