@@ -25,6 +25,7 @@ const corsOptions = {
     "http://chat.goorm-ktb-009.goorm.team/5000",
     "https://chat.goorm-ktb-009.goorm.team/5001",
     "http://chat.goorm-ktb-009.goorm.team/5001",
+    "http://localhost:3000",
   ],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -61,7 +62,7 @@ if (process.env.NODE_ENV === "development") {
 }
 
 // 기본 상태 체크
-app.get("/health", (req, res) => {
+app.get("/api/health", (req, res) => {
   res.json({
     status: "ok",
     timestamp: new Date().toISOString(),

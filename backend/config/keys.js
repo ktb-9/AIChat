@@ -1,9 +1,9 @@
 // backend/config/keys.js
-require('dotenv').config();
+require("dotenv").config();
 
 // 기본 키와 솔트 (개발 환경용)
-const DEFAULT_ENCRYPTION_KEY = 'a'.repeat(64); // 32바이트를 hex로 표현
-const DEFAULT_PASSWORD_SALT = 'b'.repeat(32); // 16바이트를 hex로 표현
+const DEFAULT_ENCRYPTION_KEY = "a".repeat(64); // 32바이트를 hex로 표현
+const DEFAULT_PASSWORD_SALT = "b".repeat(32); // 16바이트를 hex로 표현
 
 module.exports = {
   mongoURI: process.env.MONGO_URI,
