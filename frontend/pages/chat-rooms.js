@@ -70,15 +70,22 @@ const LoadingIndicator = ({ text }) => (
 const TableWrapper = ({ children, onScroll, loadingMore, hasMore, rooms }) => {
   const tableRef = useRef(null);
   const scrollTimeoutRef = useRef(null);
-  const lastScrollTime = useRef(Date.now());
 
   const handleScroll = useCallback(
     (e) => {
-      const now = Date.now();
       const container = e.target;
 
-      // 마지막 스크롤 체크로부터 150ms가 지났는지 확인
-      if (now - lastScrollTime.current >= SCROLL_DEBOUNCE_DELAY) {
+      // 스크롤 이벤트 처리가 필요한지 확인
+      if (loadingMore || !hasMore) {
+        return;
+      }
+
+      // 디바운스 처리
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+
+      scrollTimeoutRef.current = setTimeout(() => {
         const { scrollHeight, scrollTop, clientHeight } = container;
         const distanceToBottom = scrollHeight - (scrollTop + clientHeight);
 
@@ -89,41 +96,16 @@ const TableWrapper = ({ children, onScroll, loadingMore, hasMore, rooms }) => {
           distanceToBottom,
           loadingMore,
           hasMore,
-          timeSinceLastCheck: now - lastScrollTime.current,
         });
 
-        if (distanceToBottom < SCROLL_THRESHOLD && !loadingMore && hasMore) {
+        // 스크롤이 바닥에 가까워지면 추가 로드
+        if (distanceToBottom <= SCROLL_THRESHOLD) {
           console.log("Triggering load more...");
-          lastScrollTime.current = now; // 마지막 체크 시간 업데이트
           onScroll();
-          return;
         }
 
-        lastScrollTime.current = now;
-      } else if (!scrollTimeoutRef.current) {
-        // 디바운스 타이머 설정
-        scrollTimeoutRef.current = setTimeout(() => {
-          const { scrollHeight, scrollTop, clientHeight } = container;
-          const distanceToBottom = scrollHeight - (scrollTop + clientHeight);
-
-          console.log("Debounced scroll check:", {
-            scrollHeight,
-            scrollTop,
-            clientHeight,
-            distanceToBottom,
-            loadingMore,
-            hasMore,
-          });
-
-          if (distanceToBottom < SCROLL_THRESHOLD && !loadingMore && hasMore) {
-            console.log("Triggering load more (debounced)...");
-            onScroll();
-          }
-
-          scrollTimeoutRef.current = null;
-          lastScrollTime.current = Date.now();
-        }, SCROLL_DEBOUNCE_DELAY);
-      }
+        scrollTimeoutRef.current = null;
+      }, SCROLL_DEBOUNCE_DELAY);
     },
     [loadingMore, hasMore, onScroll]
   );
@@ -140,7 +122,6 @@ const TableWrapper = ({ children, onScroll, loadingMore, hasMore, rooms }) => {
       }
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current);
-        scrollTimeoutRef.current = null;
       }
     };
   }, [handleScroll]);
@@ -194,7 +175,6 @@ function ChatRoomsComponent() {
   const [pageSize] = useState(INITIAL_PAGE_SIZE);
   const [hasMore, setHasMore] = useState(true);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
-
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [selectedRoomId, setSelectedRoomId] = useState(null);
 
@@ -280,7 +260,7 @@ function ChatRoomsComponent() {
       try {
         setConnectionStatus(CONNECTION_STATUS.CONNECTING);
 
-        const response = await axiosInstance.get("api/health", {
+        const response = await axiosInstance.get("/api/health", {
           timeout: 5000,
           retries: 1,
         });
@@ -362,7 +342,7 @@ function ChatRoomsComponent() {
           return data;
         });
 
-        setHasMore(data.length === pageSize && metadata.hasMore);
+        setHasMore(metadata.hasMore);
 
         if (isInitialLoad) {
           setIsInitialLoad(false);
@@ -395,6 +375,8 @@ function ChatRoomsComponent() {
         loadingMore,
         hasMore,
         isLoading: isLoadingRef.current,
+        currentRoomsLength: rooms.length,
+        lastLoadedPage: lastLoadedPageRef.current,
       });
       return;
     }
@@ -404,9 +386,13 @@ function ChatRoomsComponent() {
       setLoadingMore(true);
       isLoadingRef.current = true;
 
-      const nextPage = Math.floor(rooms.length / pageSize);
-      console.log("Loading page:", nextPage);
-      setPageIndex(nextPage);
+      // 페이지 계산 로직 수정
+      const nextPage = lastLoadedPageRef.current + 1;
+      console.log("Loading page:", {
+        nextPage,
+        currentRoomsLength: rooms.length,
+        pageSize,
+      });
 
       const response = await axiosInstance.get("/api/rooms", {
         params: {
@@ -419,21 +405,43 @@ function ChatRoomsComponent() {
 
       if (response.data?.success) {
         const { data: newRooms, metadata } = response.data;
-        console.log("Loaded new rooms:", {
-          count: newRooms.length,
+        console.log("Server response:", {
+          newRoomsCount: newRooms.length,
           hasMore: metadata.hasMore,
+          page: metadata.page,
+          totalReceived: rooms.length + newRooms.length,
         });
 
-        setRooms((prev) => {
-          const existingIds = new Set(prev.map((room) => room._id));
-          const uniqueNewRooms = newRooms.filter(
-            (room) => !existingIds.has(room._id)
-          );
-          console.log("Unique new rooms:", uniqueNewRooms.length);
-          return [...prev, ...uniqueNewRooms];
-        });
+        if (newRooms.length > 0) {
+          setRooms((prev) => {
+            const existingIds = new Set(prev.map((room) => room._id));
+            const uniqueNewRooms = newRooms.filter(
+              (room) => !existingIds.has(room._id)
+            );
 
-        setHasMore(newRooms.length === pageSize && metadata.hasMore);
+            console.log("Unique new rooms:", {
+              count: uniqueNewRooms.length,
+              totalAfterAdd: prev.length + uniqueNewRooms.length,
+            });
+
+            return uniqueNewRooms.length > 0
+              ? [...prev, ...uniqueNewRooms]
+              : prev;
+          });
+
+          // 성공적으로 새 데이터를 받았을 때만 페이지 업데이트
+          lastLoadedPageRef.current = nextPage;
+        }
+
+        setHasMore(metadata.hasMore);
+
+        // 디버깅을 위한 추가 로그
+        if (!metadata.hasMore) {
+          console.log("No more rooms indicated by server", {
+            totalRooms: rooms.length + newRooms.length,
+            lastPage: nextPage,
+          });
+        }
       }
     } catch (error) {
       console.error("Load more rooms error:", error);
@@ -441,7 +449,6 @@ function ChatRoomsComponent() {
     } finally {
       setLoadingMore(false);
       isLoadingRef.current = false;
-      Toast.info("추가 채팅방을 불러왔습니다.");
     }
   }, [loadingMore, hasMore, rooms.length, pageSize, sorting, handleFetchError]);
 
@@ -699,6 +706,7 @@ function ChatRoomsComponent() {
     ],
     [connectionStatus]
   );
+
   const handleRoomClick = (room) => {
     if (room.hasPassword) {
       setSelectedRoomId(room._id);
